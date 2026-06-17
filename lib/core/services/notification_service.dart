@@ -66,7 +66,7 @@ class NotificationService {
 
     // Android initialisation settings – use the default app icon.
     const AndroidInitializationSettings androidSettings =
-        AndroidInitializationSettings('@mipmap/ic_launcher');
+        AndroidInitializationSettings('@mipmap/launcher_icon');
 
     const InitializationSettings initSettings = InitializationSettings(
       android: androidSettings,
@@ -175,7 +175,7 @@ class NotificationService {
         priority: Priority.high,
         playSound: true,
         enableVibration: true,
-        icon: '@mipmap/ic_launcher',
+        icon: '@mipmap/launcher_icon',
       );
 
   /// Schedules a single daily notification at [hour]:[minute] Vietnam time.
