@@ -33,7 +33,7 @@ jobs:
         run: flutter pub get
 
       - name: Build APK
-        run: flutter build apk --release
+        run: flutter build apk --release --build-name=${GITHUB_REF_NAME#v} --build-number=${GITHUB_RUN_NUMBER}
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2

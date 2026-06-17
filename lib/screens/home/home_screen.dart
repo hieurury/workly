@@ -13,6 +13,7 @@ import '../../data/models/work_model.dart';
 import '../../data/models/attendance_model.dart';
 import '../../providers/user_provider.dart';
 import '../../providers/work_provider.dart';
+import '../../core/services/update_service.dart';
 import 'attendance_detail_sheet.dart';
 import 'attendance_form_sheet.dart';
 import '../work/work_form_screen.dart';
@@ -26,6 +27,14 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   bool _show30Days = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      UpdateService.checkForUpdates(context);
+    });
+  }
 
   String _getGreeting() {
     final hour = DateTime.now().hour;
