@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/constants/app_colors.dart';
@@ -10,8 +11,28 @@ import '../../providers/user_provider.dart';
 import 'profile_edit_screen.dart';
 import 'user_guide_screen.dart';
 
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
+
+  @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
+  String _version = '1.0.0';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadVersion();
+  }
+
+  Future<void> _loadVersion() async {
+    try {
+      final info = await PackageInfo.fromPlatform();
+      if (mounted) setState(() => _version = info.version);
+    } catch (_) {}
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -162,7 +183,7 @@ class ProfileScreen extends StatelessWidget {
                       ListTile(
                         leading: const Icon(Icons.info_outline_rounded),
                         title: const Text('Phiên bản'),
-                        trailing: Text('1.0.0', style: AppTextStyles.bodyMedium(context)),
+                        trailing: Text(_version, style: AppTextStyles.bodyMedium(context)),
                       ),
                       const Divider(indent: 56),
                       ListTile(

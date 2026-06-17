@@ -89,11 +89,14 @@ class _WorkFormScreenState extends State<WorkFormScreen> {
   // -- Step 8 --
   List<SubsidyModel> _subsidies = [];
 
+  // -- Step 9 --
+  List<SubsidyModel> _conditionalSubsidies = [];
+
   @override
   void initState() {
     super.initState();
     if (widget.workToEdit != null) {
-      _maxReachedStep = 7;
+      _maxReachedStep = 8;
       _loadExistingWork(widget.workToEdit!);
     }
   }
@@ -157,8 +160,9 @@ class _WorkFormScreenState extends State<WorkFormScreen> {
     _compDayController.text = fmt.format(w.config.compensationDay);
     _compNightController.text = fmt.format(w.config.compensationNight);
 
-    // Step 8
+    // Step 8 & 9
     _subsidies = List.from(w.config.subsidy);
+    _conditionalSubsidies = List.from(w.config.conditionalSubsidies);
   }
 
   TimeOfDay? _parseTime(String t) {
@@ -219,6 +223,7 @@ class _WorkFormScreenState extends State<WorkFormScreen> {
       compensationNight: _parseCurrency(_compNightController.text),
       numberOfDayWork: days,
       subsidy: _subsidies,
+      conditionalSubsidies: _conditionalSubsidies,
     );
 
     if (widget.workToEdit != null) {
@@ -271,7 +276,7 @@ class _WorkFormScreenState extends State<WorkFormScreen> {
       }
     }
 
-    if (_currentStep < 7) {
+    if (_currentStep < 8) {
       _pageController.nextPage(duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
     } else {
       _submit();
@@ -436,7 +441,7 @@ class _WorkFormScreenState extends State<WorkFormScreen> {
             child: SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: Row(
-                children: List.generate(8, (index) {
+                children: List.generate(9, (index) {
                   final isReached = index <= _maxReachedStep;
                   final isActive = index == _currentStep;
                   
@@ -502,6 +507,7 @@ class _WorkFormScreenState extends State<WorkFormScreen> {
                 _buildPage(_buildStep6()),
                 _buildPage(_buildStep7()),
                 _buildPage(_buildStep8()),
+                _buildPage(_buildStep9()),
               ],
             ),
           ),
@@ -519,7 +525,7 @@ class _WorkFormScreenState extends State<WorkFormScreen> {
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                 ),
                 child: Text(
-                  _currentStep == 7 ? 'Hoàn tất' : 'Tiếp theo',
+                  _currentStep == 8 ? 'Hoàn tất' : 'Tiếp theo',
                   style: TextStyle(
                     color: isDark ? Colors.black : Colors.white,
                     fontWeight: FontWeight.bold,
@@ -893,7 +899,7 @@ class _WorkFormScreenState extends State<WorkFormScreen> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Thêm phụ cấp'),
+        title: const Text('Thêm phụ cấp cứng'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -909,6 +915,84 @@ class _WorkFormScreenState extends State<WorkFormScreen> {
               if (titleCtrl.text.isNotEmpty && valCtrl.text.isNotEmpty) {
                 setState(() {
                   _subsidies.add(SubsidyModel(
+                    id: const Uuid().v4(),
+                    title: titleCtrl.text,
+                    value: _parseCurrency(valCtrl.text),
+                  ));
+                });
+                Navigator.pop(ctx);
+              }
+            },
+            child: const Text('Thêm'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStep9() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Phụ cấp theo ngày công (Tùy chọn)', style: AppTextStyles.headlineSmall(context)),
+        const SizedBox(height: 8),
+        Text('Các khoản này (đi lại, ăn trưa...) sẽ được cộng vào thu nhập mỗi ngày đi làm.', style: AppTextStyles.bodyMedium(context).copyWith(color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight)),
+        const SizedBox(height: 24),
+        ..._conditionalSubsidies.asMap().entries.map((e) {
+          final idx = e.key;
+          final sub = e.value;
+          return Container(
+            margin: const EdgeInsets.only(bottom: 12),
+            decoration: BoxDecoration(
+              color: isDark ? AppColors.surfaceVariantDark : Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.05), blurRadius: 8, offset: const Offset(0, 2))],
+            ),
+            child: ListTile(
+              title: Text(sub.title, style: AppTextStyles.labelLarge(context)),
+              subtitle: Text('${NumberFormat('#,###', 'vi_VN').format(sub.value)} VNĐ'),
+              trailing: IconButton(
+                icon: const Icon(Icons.delete, color: AppColors.danger),
+                onPressed: () => setState(() => _conditionalSubsidies.removeAt(idx)),
+              ),
+            ),
+          );
+        }),
+        const SizedBox(height: 16),
+        Center(
+          child: OutlinedButton.icon(
+            onPressed: _showAddConditionalSubsidyDialog,
+            icon: const Icon(Icons.add),
+            label: const Text('Thêm phụ cấp theo điều kiện'),
+          ),
+        ),
+      ],
+    );
+  }
+
+  void _showAddConditionalSubsidyDialog() {
+    final titleCtrl = TextEditingController();
+    final valCtrl = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Thêm phụ cấp theo điều kiện'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _buildTextField('Tên phụ cấp', titleCtrl),
+            const SizedBox(height: 16),
+            _buildTextField('Số tiền', valCtrl, isCurrency: true),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Hủy')),
+          ElevatedButton(
+            onPressed: () {
+              if (titleCtrl.text.isNotEmpty && valCtrl.text.isNotEmpty) {
+                setState(() {
+                  _conditionalSubsidies.add(SubsidyModel(
                     id: const Uuid().v4(),
                     title: titleCtrl.text,
                     value: _parseCurrency(valCtrl.text),

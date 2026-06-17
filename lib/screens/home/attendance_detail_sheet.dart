@@ -172,6 +172,18 @@ class AttendanceDetailSheet extends StatelessWidget {
                         isDark,
                       ),
                       
+                      if (config.conditionalSubsidies.isNotEmpty)
+                        _buildInfoRow(
+                          context,
+                          Icons.local_cafe_rounded,
+                          'Phụ cấp (theo ngày)',
+                          WorklyDateUtils.formatCurrency(
+                            SalaryCalculator.calculateTotalConditionalSubsidy(config) / (config.numberOfDayWork > 0 ? config.numberOfDayWork : 1)
+                          ),
+                          isDark,
+                          valueColor: Colors.teal.shade400,
+                        ),
+                      
                       Padding(
                         padding: const EdgeInsets.symmetric(vertical: 8.0),
                         child: Divider(

@@ -67,8 +67,12 @@ class WorkConfigModel {
   /// Số ngày công trong tháng dùng để tính lương (e.g. `24`).
   final int numberOfDayWork;
 
-  /// Danh sách các khoản trợ cấp.
+  /// Danh sách các khoản trợ cấp (phụ cấp cứng).
   final List<SubsidyModel> subsidy;
+
+  /// Danh sách các khoản phụ cấp theo điều kiện (vd: đi lại, ăn trưa).
+  /// Sẽ được chia đều theo [numberOfDayWork] và cộng vào từng ngày đi làm.
+  final List<SubsidyModel> conditionalSubsidies;
 
   const WorkConfigModel({
     required this.baseSalary,
@@ -91,6 +95,7 @@ class WorkConfigModel {
     required this.compensationNight,
     required this.numberOfDayWork,
     required this.subsidy,
+    required this.conditionalSubsidies,
   });
 
   // ---------------------------------------------------------------------------
@@ -123,6 +128,7 @@ class WorkConfigModel {
       compensationNight: 0.0,
       numberOfDayWork: numberOfDayWork,
       subsidy: const [],
+      conditionalSubsidies: const [],
     );
   }
 
@@ -159,6 +165,9 @@ class WorkConfigModel {
       subsidy: (json['subsidy'] as List<dynamic>?)
           ?.map((e) => SubsidyModel.fromJson(e as Map<String, dynamic>))
           .toList() ?? [],
+      conditionalSubsidies: (json['conditionalSubsidies'] as List<dynamic>?)
+          ?.map((e) => SubsidyModel.fromJson(e as Map<String, dynamic>))
+          .toList() ?? [],
     );
   }
 
@@ -189,6 +198,7 @@ class WorkConfigModel {
       'compensationNight': compensationNight,
       'numberOfDayWork': numberOfDayWork,
       'subsidy': subsidy.map((s) => s.toJson()).toList(),
+      'conditionalSubsidies': conditionalSubsidies.map((s) => s.toJson()).toList(),
     };
   }
 
@@ -231,6 +241,7 @@ class WorkConfigModel {
     double? compensationNight,
     int? numberOfDayWork,
     List<SubsidyModel>? subsidy,
+    List<SubsidyModel>? conditionalSubsidies,
     bool clearDayWorkTime = false,
     bool clearNightWorkTime = false,
     bool clearDayStartWork = false,
@@ -269,6 +280,7 @@ class WorkConfigModel {
       compensationNight: compensationNight ?? this.compensationNight,
       numberOfDayWork: numberOfDayWork ?? this.numberOfDayWork,
       subsidy: subsidy ?? this.subsidy,
+      conditionalSubsidies: conditionalSubsidies ?? this.conditionalSubsidies,
     );
   }
 

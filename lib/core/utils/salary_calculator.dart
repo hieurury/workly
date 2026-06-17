@@ -71,7 +71,12 @@ class SalaryCalculator {
         ? (attendance.typeWorkTime == 'day' ? config.compensationDay : config.compensationNight) 
         : 0.0;
 
-    return baseDaySalary + overtimePay + compensation;
+    final conditionalSubsidyTotal = calculateTotalConditionalSubsidy(config);
+    final conditionalSubsidyDay = config.numberOfDayWork > 0 
+        ? (conditionalSubsidyTotal / config.numberOfDayWork) 
+        : 0.0;
+
+    return baseDaySalary + overtimePay + compensation + conditionalSubsidyDay;
   }
 
   /// Tính chu kỳ lương hiện tại dựa vào ngày tham chiếu (vd: DateTime.now())
@@ -192,19 +197,30 @@ class SalaryCalculator {
     return config.subsidy.fold(0.0, (sum, s) => sum + s.value);
   }
 
+  static double calculateTotalConditionalSubsidy(WorkConfigModel config) {
+    if (config.conditionalSubsidies.isEmpty) return 0;
+    return config.conditionalSubsidies.fold(0.0, (sum, s) => sum + s.value);
+  }
+
   static Map<String, double> calculateCycleSalaryBreakdown(WorkModel work, SalaryCycle cycle) {
     double baseSalary = 0;
     double overtimePay = 0;
     double compensation = 0;
+    double conditionalSubsidy = 0;
 
     final config = work.config;
     final hourSalary = calculateHourSalary(config);
+    final totalCondSubsidy = calculateTotalConditionalSubsidy(config);
+    final dailyCondSubsidy = config.numberOfDayWork > 0 
+        ? (totalCondSubsidy / config.numberOfDayWork) 
+        : 0.0;
 
     for (final att in work.data) {
       if (!cycle.contains(att.date)) continue;
       if (att.isOff) continue;
 
       baseSalary += hourSalary * config.normalWorkTime;
+      conditionalSubsidy += dailyCondSubsidy;
 
       final otHours = calculateOvertimeHours(att, config);
       final multiplier = _overtimeMultiplier(att, config);
@@ -222,6 +238,7 @@ class SalaryCalculator {
       'overtime': overtimePay,
       'compensation': compensation,
       'subsidy': subsidy,
+      'conditional_subsidy': conditionalSubsidy,
     };
   }
 

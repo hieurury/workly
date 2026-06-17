@@ -285,8 +285,9 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
     final overtime = breakdown['overtime'] ?? 0;
     final compensation = breakdown['compensation'] ?? 0;
     final subsidy = breakdown['subsidy'] ?? 0;
+    final conditionalSubsidy = breakdown['conditional_subsidy'] ?? 0;
     
-    final hasData = (salary + overtime + compensation + subsidy) > 0;
+    final hasData = (salary + overtime + compensation + subsidy + conditionalSubsidy) > 0;
     
     if (!hasData) {
       return Container(
@@ -303,6 +304,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
     final cSalary = Colors.blue.shade400;
     final cOvertime = Colors.orange.shade400;
     final cSubsidy = Colors.green.shade400;
+    final cConditionalSubsidy = Colors.teal.shade400;
     final cCompensation = Colors.purple.shade400;
 
     return Container(
@@ -326,6 +328,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
                     if (salary > 0) PieChartSectionData(color: cSalary, value: salary, title: '', radius: 45),
                     if (overtime > 0) PieChartSectionData(color: cOvertime, value: overtime, title: '', radius: 45),
                     if (subsidy > 0) PieChartSectionData(color: cSubsidy, value: subsidy, title: '', radius: 45),
+                    if (conditionalSubsidy > 0) PieChartSectionData(color: cConditionalSubsidy, value: conditionalSubsidy, title: '', radius: 45),
                     if (compensation > 0) PieChartSectionData(color: cCompensation, value: compensation, title: '', radius: 45),
                   ],
                 ),
@@ -343,7 +346,9 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
                 _buildLegendItem('Tăng ca', overtime, cOvertime),
                 const SizedBox(height: 12),
                 _buildLegendItem('Trợ cấp', subsidy, cSubsidy),
-                const SizedBox(height: 12),
+                const SizedBox(height: 8),
+                _buildLegendItem('Phụ cấp theo ngày', conditionalSubsidy, cConditionalSubsidy),
+                const SizedBox(height: 8),
                 _buildLegendItem('Đền bù', compensation, cCompensation),
               ],
             ),

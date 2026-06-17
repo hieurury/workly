@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
@@ -80,11 +81,13 @@ class _HomeScreenState extends State<HomeScreen> {
             _buildBreakdownRow('Lương cơ bản', breakdown['salary']!, isDark),
             _buildBreakdownRow('Tăng ca', breakdown['overtime']!, isDark),
             _buildBreakdownRow('Trợ cấp', breakdown['subsidy']!, isDark),
+            if ((breakdown['conditional_subsidy'] ?? 0) > 0)
+              _buildBreakdownRow('Phụ cấp theo ngày', breakdown['conditional_subsidy']!, isDark),
             _buildBreakdownRow('Đền bù', breakdown['compensation']!, isDark),
             const Divider(height: 24),
             _buildBreakdownRow(
               'Tổng cộng', 
-              breakdown['salary']! + breakdown['overtime']! + breakdown['subsidy']! + breakdown['compensation']!, 
+              breakdown['salary']! + breakdown['overtime']! + breakdown['subsidy']! + breakdown['compensation']! + (breakdown['conditional_subsidy'] ?? 0), 
               isDark, 
               isTotal: true,
             ),
@@ -347,7 +350,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final now = DateTime.now();
     final cycle = SalaryCalculator.getSalaryCycle(work, now);
     final breakdown = SalaryCalculator.calculateCycleSalaryBreakdown(work, cycle);
-    final cycleSalary = breakdown['salary']! + breakdown['overtime']! + breakdown['compensation']! + breakdown['subsidy']!;
+    final cycleSalary = breakdown['salary']! + breakdown['overtime']! + breakdown['compensation']! + breakdown['subsidy']! + breakdown['conditional_subsidy']!;
     
     final currentCycleAtts = work.data.where((a) => cycle.contains(a.date)).toList();
     
@@ -563,9 +566,22 @@ class _HomeScreenState extends State<HomeScreen> {
       current = current.add(const Duration(days: 1));
     }
     
-    final days = (_show30Days || cycleDaysCount <= 7)
-        ? cycleDays.reversed.toList()
-        : WorklyDateUtils.getLast7Days().reversed.toList();
+    List<DateTime> days;
+    if (_show30Days || cycleDaysCount <= 7) {
+      days = cycleDays.reversed.toList();
+    } else {
+      final today = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
+      int todayIndex = cycleDays.indexWhere((d) => d.year == today.year && d.month == today.month && d.day == today.day);
+      if (todayIndex == -1) todayIndex = 0;
+      
+      int start = math.max(0, todayIndex - 3);
+      int end = start + 7;
+      if (end > cycleDays.length) {
+        end = cycleDays.length;
+        start = math.max(0, end - 7);
+      }
+      days = cycleDays.sublist(start, end).reversed.toList();
+    }
         
     return SliverPadding(
       padding: const EdgeInsets.symmetric(horizontal: 20),

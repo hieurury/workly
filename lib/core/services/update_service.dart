@@ -81,8 +81,15 @@ class UpdateService {
             ElevatedButton(
               onPressed: () async {
                 final uri = Uri.parse(url);
-                if (await canLaunchUrl(uri)) {
+                try {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Đang mở trình duyệt để tải xuống...')),
+                  );
                   await launchUrl(uri, mode: LaunchMode.externalApplication);
+                } catch (e) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Không thể mở liên kết tải xuống.')),
+                  );
                 }
               },
               style: ElevatedButton.styleFrom(
